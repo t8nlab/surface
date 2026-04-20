@@ -1,7 +1,6 @@
-# ⏣ Titan Surface
-**The Native Capability Layer for TitanPL**
+# ⏣ TitanPl Surface
 
-Surface is an ultra-optimized native extension provider for the TitanPl framework, built entirely in **Go**. It handles data-heavy, IO-bound, and system-level tasks outside the JavaScript runtime to ensure sub-millisecond response times and rock-solid stability.
+Surface is an ultra-optimized high level modules provider native extension for the TitanPl framework, built entirely in **Go**. It handles data-heavy, IO-bound, and system-level tasks outside the JavaScript runtime to ensure sub-millisecond response times and rock-solid stability.
 
 ---
 
@@ -34,14 +33,14 @@ const h = csv.open("./data.csv", {
 });
 ```
 
-#### `csv.next(handle, options)`
+#### `csv.next(handler, options)`
 Streaming access to the native buffer.
 ```javascript
 const chunk = csv.next(h, { size: 500 });
 console.log(chunk.rows); // Array of 500 pre-fetched records
 ```
 
-#### `csv.readAll(handle)`
+#### `csv.readAll(handler)`
 Flushes the entire file through Go into JS in one pass.
 ```javascript
 const allUsers = csv.readAll(h); // The absolute fastest way to read
@@ -53,14 +52,14 @@ Creates a new CSV with native buffering.
 const wh = csv.create("./export.csv", { headers: ["name", "score"] });
 ```
 
-#### `csv.write(handle, data)`
+#### `csv.write(handler, data)`
 Writes records with near-zero latency.
 ```javascript
 csv.write(wh, { name: "Soham", score: 100 });
 csv.write(wh, [{ name: "John", score: 80 }, { name: "Jane", score: 95 }]);
 ```
 
-#### `csv.close(handle)`
+#### `csv.close(handler)`
 Kills background threads and releases OS file locks.
 ```javascript
 try { ... } finally { csv.close(h); }

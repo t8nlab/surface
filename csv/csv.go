@@ -39,15 +39,15 @@ type CsvWriter struct {
 }
 
 var (
-	streams    = make(map[string]*CsvStream)
-	writers    = make(map[string]*CsvWriter)
-	mu         sync.Mutex
-	handleCount int
+	streams      = make(map[string]*CsvStream)
+	writers      = make(map[string]*CsvWriter)
+	mu           sync.Mutex
+	handlerCount int
 )
 
-func generateHandle() string {
-	handleCount++
-	return fmt.Sprintf("csv_%d", handleCount)
+func generateHandler() string {
+	handlerCount++
+	return fmt.Sprintf("csv_%d", handlerCount)
 }
 
 // --- Reader Functions ---
@@ -60,7 +60,6 @@ func CsvOpen(input map[string]any) (any, error) {
 
 	header := sfInput.GetBool(input, "header", true)
 	inferTypes := sfInput.GetBool(input, "inferTypes", false)
-	_ = sfInput.GetBool(input, "delimiter", false) // Wait, delimiter should be string
 	
 	// Better delimiter handling
 	delimiter := ','
@@ -101,9 +100,6 @@ func CsvOpen(input map[string]any) (any, error) {
 						break
 					}
 				}
-			} else {
-				// if no header, assume select is indices as strings or col_N
-				// for now, let's keep it simple: if no header, select depends on col_N pattern
 			}
 		}
 	}
@@ -111,16 +107,11 @@ func CsvOpen(input map[string]any) (any, error) {
 	// Determine Mode
 	mode, _ := sfInput.GetString(input, "mode")
 	if mode == "" {
-		// Auto-switch based on file size
-		if info, err := file.Stat(); err == nil && info.Size() > 5*1024*1024 { // 5MB
-			mode = "column"
-		} else {
-			mode = "object"
-		}
+		mode = "object"
 	}
 
 	mu.Lock()
-	handle := generateHandle()
+	handler := generateHandler()
 	s := &CsvStream{
 		reader:     reader,
 		headers:    headers,
@@ -128,15 +119,15 @@ func CsvOpen(input map[string]any) (any, error) {
 		inferTypes: inferTypes,
 		mode:       mode,
 		file:       file,
-		records:    make(chan []byte, 2000), // Larger buffer
+		records:    make(chan []byte, 2000), 
 		stop:		make(chan struct{}),
 	}
-	streams[handle] = s
+	streams[handler] = s
 	mu.Unlock()
 
 	go s.preFetch()
 
-	return map[string]string{"handle": handle}, nil
+	return map[string]string{"handler": handler}, nil
 }
 
 func (s *CsvStream) preFetch() {
@@ -147,14 +138,12 @@ func (s *CsvStream) preFetch() {
 	headers := s.headers
 	selectMap := s.selectMap
 
-	// Pre-calculate active fields to minimize work in the loop
 	type field struct {
 		index int
 		key   []byte
 	}
 	var fields []field
 
-	// If no selection, use all headers/columns
 	if selectMap == nil {
 		if mode == "object" {
 			for i, h := range headers {
@@ -165,9 +154,6 @@ func (s *CsvStream) preFetch() {
 			}
 		}
 	} else {
-		// Respect selection order/presence
-		// We iterate sorted indices to keep consistent JSON if possible,
-		// but use the count in record to bound it.
 		var indices []int
 		for i := range selectMap {
 			indices = append(indices, i)
@@ -199,12 +185,8 @@ func (s *CsvStream) preFetch() {
 			rowBuf.WriteByte('{')
 			written := 0
 			for _, f := range fields {
-				if f.index >= len(record) {
-					continue
-				}
-				if written > 0 {
-					rowBuf.WriteByte(',')
-				}
+				if f.index >= len(record) { continue }
+				if written > 0 { rowBuf.WriteByte(',') }
 				rowBuf.Write(f.key)
 				val := record[f.index]
 				if inferTypes {
@@ -233,12 +215,8 @@ func (s *CsvStream) preFetch() {
 				}
 			} else {
 				for _, f := range fields {
-					if f.index >= len(record) {
-						continue
-					}
-					if written > 0 {
-						rowBuf.WriteByte(',')
-					}
+					if f.index >= len(record) { continue }
+					if written > 0 { rowBuf.WriteByte(',') }
 					val := record[f.index]
 					if inferTypes {
 						v, _ := json.Marshal(infer(val))
@@ -261,52 +239,21 @@ func (s *CsvStream) preFetch() {
 	}
 }
 
-func (s *CsvStream) processRecordLegacy(record []string) any {
-	var processed []any
-	var keys []string
-	for idx, val := range record {
-		name := ""
-		if s.selectMap != nil {
-			if n, ok := s.selectMap[idx]; ok {
-				name = n
-			} else {
-				continue
-			}
-		} else if s.headers != nil && idx < len(s.headers) {
-			name = s.headers[idx]
-		} else {
-			name = fmt.Sprintf("col_%d", idx)
-		}
-		var v any = val
-		if s.inferTypes {
-			v = infer(val)
-		}
-		keys = append(keys, name)
-		processed = append(processed, v)
-	}
-	return map[string]any{"keys": keys, "values": processed}
-}
-
 func CsvNext(input map[string]any) (any, error) {
-	handle, err := sfInput.GetString(input, "handle")
-	if err != nil {
-		return nil, err
-	}
+	handler, err := sfInput.GetString(input, "handler")
+	if err != nil { return nil, err }
 
 	size, _ := sfInput.GetInt(input, "size")
-	if size <= 0 {
-		size = 100
-	}
+	if size <= 0 { size = 100 }
 
 	mu.Lock()
-	s, ok := streams[handle]
+	s, ok := streams[handler]
 	mu.Unlock()
 
 	if !ok {
-		return nil, errors.New("invalid or closed handle: " + handle)
+		return nil, errors.New("invalid or closed handler: " + handler)
 	}
 
-	// Pull from channel without holding the full stream lock
 	var combinedBuf bytes.Buffer
 	combinedBuf.WriteByte('[')
 	count := 0
@@ -323,15 +270,13 @@ func CsvNext(input map[string]any) (any, error) {
 			combinedBuf.Write(item)
 			count++
 		default:
-			// If nothing in channel, block for at least one UNLESS we are already done
 			s.mu.Lock()
 			isDone := s.done
 			s.mu.Unlock()
 
 			if count > 0 || isDone {
-				i = size // exit loop
+				i = size 
 			} else {
-				// Block for at least one
 				item, ok := <-s.records
 				if !ok {
 					done = true
@@ -343,9 +288,7 @@ func CsvNext(input map[string]any) (any, error) {
 				}
 			}
 		}
-		if done {
-			break
-		}
+		if done { break }
 	}
 	combinedBuf.WriteByte(']')
 
@@ -355,34 +298,25 @@ func CsvNext(input map[string]any) (any, error) {
 	}
 	s.mu.Unlock()
 
-	result := map[string]any{
+	return map[string]any{
 		"done": done,
 		"mode": s.mode,
 		"rows": json.RawMessage(combinedBuf.Bytes()),
-	}
-	
-	if s.mode == "raw" {
-		result["raw"] = result["rows"]
-	}
-
-	return result, nil
+	}, nil
 }
 
 func CsvReadAll(input map[string]any) (any, error) {
-	handle, err := sfInput.GetString(input, "handle")
-	if err != nil {
-		return nil, err
-	}
+	handler, err := sfInput.GetString(input, "handler")
+	if err != nil { return nil, err }
 
 	mu.Lock()
-	s, ok := streams[handle]
+	s, ok := streams[handler]
 	mu.Unlock()
 
 	if !ok {
-		return nil, errors.New("invalid or closed handle: " + handle)
+		return nil, errors.New("invalid or closed handler: " + handler)
 	}
 
-	// Pull EVERYTHING and join into one massive JSON array
 	var combinedBuf bytes.Buffer
 	combinedBuf.WriteByte('[')
 	count := 0
@@ -400,34 +334,10 @@ func CsvReadAll(input map[string]any) (any, error) {
 	return json.RawMessage(combinedBuf.Bytes()), nil
 }
 
-func getSelectedHeaders(s *CsvStream) []string {
-	if s.selectMap != nil {
-		var indices []int
-		for i := range s.selectMap {
-			indices = append(indices, i)
-		}
-		sort.Ints(indices)
-
-		var headers []string
-		for _, i := range indices {
-			headers = append(headers, s.selectMap[i])
-		}
-		return headers
-	}
-	return s.headers
-}
-
-
 func infer(v string) any {
-	if i, err := strconv.Atoi(v); err == nil {
-		return i
-	}
-	if f, err := strconv.ParseFloat(v, 64); err == nil {
-		return f
-	}
-	if v == "true" || v == "false" {
-		return v == "true"
-	}
+	if i, err := strconv.Atoi(v); err == nil { return i }
+	if f, err := strconv.ParseFloat(v, 64); err == nil { return f }
+	if v == "true" || v == "false" { return v == "true" }
 	return v
 }
 
@@ -435,26 +345,18 @@ func infer(v string) any {
 
 func CsvCreate(input map[string]any) (any, error) {
 	path, err := sfInput.GetString(input, "path")
-	if err != nil {
-		return nil, err
-	}
+	if err != nil { return nil, err }
 
 	headersAny, ok := input["headers"].([]any)
-	if !ok {
-		return nil, errors.New("headers must be an array of strings")
-	}
+	if !ok { return nil, errors.New("headers must be an array of strings") }
 
 	var headers []string
 	for _, h := range headersAny {
-		if s, ok := h.(string); ok {
-			headers = append(headers, s)
-		}
+		if s, ok := h.(string); ok { headers = append(headers, s) }
 	}
 
 	file, err := os.Create(path)
-	if err != nil {
-		return nil, err
-	}
+	if err != nil { return nil, err }
 
 	writer := csv.NewWriter(file)
 	if err := writer.Write(headers); err != nil {
@@ -463,34 +365,30 @@ func CsvCreate(input map[string]any) (any, error) {
 	}
 
 	mu.Lock()
-	handle := generateHandle()
-	writers[handle] = &CsvWriter{
+	handler := generateHandler()
+	writers[handler] = &CsvWriter{
 		writer:  writer,
 		headers: headers,
 		file:    file,
 	}
 	mu.Unlock()
 
-	return map[string]string{"handle": handle}, nil
+	return map[string]string{"handler": handler}, nil
 }
 
 func CsvWrite(input map[string]any) (any, error) {
-	handle, err := sfInput.GetString(input, "handle")
-	if err != nil {
-		return nil, err
-	}
+	handler, err := sfInput.GetString(input, "handler")
+	if err != nil { return nil, err }
 
 	rows, ok := input["rows"].([]any)
-	if !ok {
-		return nil, errors.New("rows must be an array")
-	}
+	if !ok { return nil, errors.New("rows must be an array") }
 
 	mu.Lock()
-	w, ok := writers[handle]
+	w, ok := writers[handler]
 	mu.Unlock()
 
 	if !ok {
-		return nil, errors.New("invalid or closed writer handle: " + handle)
+		return nil, errors.New("invalid or closed writer handler: " + handler)
 	}
 
 	w.mu.Lock()
@@ -498,9 +396,7 @@ func CsvWrite(input map[string]any) (any, error) {
 
 	for _, r := range rows {
 		rowMap, ok := r.(map[string]any)
-		if !ok {
-			continue
-		}
+		if !ok { continue }
 
 		var record []string
 		for _, h := range w.headers {
@@ -510,40 +406,34 @@ func CsvWrite(input map[string]any) (any, error) {
 				record = append(record, "")
 			}
 		}
-		if err := w.writer.Write(record); err != nil {
-			return nil, err
-		}
+		if err := w.writer.Write(record); err != nil { return nil, err }
 	}
 
 	w.writer.Flush()
 	return true, nil
 }
 
-// --- Common ---
-
 func CsvClose(input map[string]any) (any, error) {
-	handle, err := sfInput.GetString(input, "handle")
-	if err != nil {
-		return nil, err
-	}
+	handler, err := sfInput.GetString(input, "handler")
+	if err != nil { return nil, err }
 
 	mu.Lock()
 	defer mu.Unlock()
 
-	if s, ok := streams[handle]; ok {
+	if s, ok := streams[handler]; ok {
 		s.mu.Lock()
 		close(s.stop)
 		s.file.Close()
 		s.mu.Unlock()
-		delete(streams, handle)
+		delete(streams, handler)
 	}
 
-	if w, ok := writers[handle]; ok {
+	if w, ok := writers[handler]; ok {
 		w.mu.Lock()
 		w.writer.Flush()
 		w.file.Close()
 		w.mu.Unlock()
-		delete(writers, handle)
+		delete(writers, handler)
 	}
 
 	return true, nil

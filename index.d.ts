@@ -1,7 +1,7 @@
 /**
  * @package @titanpl/surface
  * 
- * Surface is a high-performance and top-level utils provider native extension for the TitanPl framework,
+ * Surface is an ultra-optimized high level modules provider native extension for the TitanPl framework,
  * handle data-heavy, IO-bound, and system-level tasks outside the JavaScript runtime 
  * for maximum performance and stability.
  */
@@ -125,7 +125,7 @@ export declare const csv: {
    * Opens a CSV file for reading and starts the native pre-fetching process.
    * @param path Absolute or relative path to the .csv file
    * @param opts Configuration for the reader
-   * @returns A native handle string to be used with other csv functions
+   * @returns A native handler string to be used with other csv functions
    * 
    * @example
    * const h = csv.open("data.csv", { mode: "object" });
@@ -145,25 +145,25 @@ export declare const csv: {
   /**
    * Reads a chunk of records from the native buffer.
    * This is extremely fast as Go pre-fetches records in the background.
-   * @param handle The handle returned by csv.open()
+   * @param handler The handler returned by csv.open()
    * @param opts Chunking configuration
    */
-  next<T = any>(handle: string, opts?: csv.NextOptions): csv.Chunk<T>;
+  next<T = any>(handler: string, opts?: csv.NextOptions): csv.Chunk<T>;
 
   /**
    * Reads the entire remaining contents of the CSV file in one Go call.
    * Moves the iteration loop into the native layer for zero JS overhead.
-   * @param handle The handle returned by csv.open()
+   * @param handler The handler returned by csv.open()
    * @returns All records in the format specified by the mode
    */
-  readAll<T = any>(handle: string): T[];
+  readAll<T = any>(handler: string): T[];
 
   /**
-   * Closes the file handle and stops the native pre-fetching goroutine.
+   * Closes the file handler and stops the native pre-fetching goroutine.
    * Always call this in a finally block to prevent memory leaks.
-   * @param handle The handle to close
+   * @param handler The handler to close
    */
-  close(handle: string): void;
+  close(handler: string): void;
 
   /**
    * Creates or overwrites a CSV file for writing.
@@ -174,10 +174,10 @@ export declare const csv: {
 
   /**
    * Writes rows to the CSV file.
-   * @param handle The handle returned by csv.create()
+   * @param handler The handler returned by csv.create()
    * @param rows Array of objects matching the headers
    */
-  write(handle: string, rows: any[]): void;
+  write(handler: string, rows: any[]): void;
 };
 
 /** High-speed native SMTP utilities */
