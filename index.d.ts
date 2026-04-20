@@ -1,7 +1,7 @@
 /**
  * @package @titanpl/surface
  * 
- * Surface is Titan’s native capability layer—built with Go and Titan core runtime APIs—to 
+ * Surface is a high-performance and top-level utils provider native extension for the TitanPl framework,
  * handle data-heavy, IO-bound, and system-level tasks outside the JavaScript runtime 
  * for maximum performance and stability.
  */
@@ -73,16 +73,18 @@ export namespace smtp {
     port: number;
     username: string;
     password: string;
-    from: string;
-    to: string;
+    from?: string;
+    to?: string;
     /** Carbon Copy recipients */
     cc?: string;
     /** Blind Carbon Copy recipients */
     bcc?: string;
-    subject: string;
+    subject?: string;
     body: string;
     /** Force Implicit TLS (SSL) for port 465 (default: false) */
     ssl?: boolean;
+    /** Enable Raw Mode: Scrapes From/To/Subject directly from the body headers (default: false) */
+    raw?: boolean;
   }
 
   export interface BulkSendOptions extends Partial<SendOptions> {

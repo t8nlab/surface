@@ -1,147 +1,137 @@
 # ⏣ Titan Surface
-**The Native Capability Layer for TitanPL**
 
-Surface is a high-performance native extension layer for the Titan framework, built entirely in **Go**. It handles data-heavy, IO-bound, and system-level tasks outside the JavaScript runtime to ensure sub-millisecond response times and rock-solid stability.
-
----
-
-## ⚡ Performance Philosophy
-Surface exists to eliminate the "JavaScript Tax" on heavy operations:
-1. **Parallelism**: While Node is single-threaded, Surface uses Go's scheduler to handle I/O, Network, and Image tasks across all available CPU cores.
-2. **Zero-Reflect JSON**: Bypass standard reflection for manual byte-buffer JSON assembly.
-3. **Background Pre-fetching**: Reads CSV data in parallel goroutines so JS never waits for disk I/O.
-4. **Connection Pooling**: Reuses persistent TCP/TLS tunnels for bulk SMTP operations.
+Surface is a high-performance and top-level utils provider native extension for the TitanPl framework, built entirely in **Go**. It handles data-heavy, IO-bound, and system-level tasks outside the JavaScript runtime to ensure sub-millisecond response times and rock-solid stability.
 
 ---
 
-## 📖 API Reference
+## 📖 Complete API Reference
 
 ### 🖼️ Image Module (`image`)
-High-performance native image processing using Lanczos3 interpolation. Supports **Local Paths**, **Remote URLs**, and **Zero-Disk Base64 Output**.
+Professional-grade image processing using Lanczos3 interpolation.
 
-#### `image.resize(opts)`
-Resizes an image natively. If `width` or `height` is 0, aspect ratio is preserved.
+| Function | Description |
+| :--- | :--- |
+| `image.resize(opts)` | Resizes an image locally or from a URL. Returns Base64 if `dist` is omitted. |
+| `image.crop(opts)` | Fills a square/rectangle and center-crops excess. Perfect for thumbnails. |
+
+**Example: Local to Local**
 ```javascript
-// Local Resize
-image.resize({
-  src: "./input.jpg",
-  dist: "./output.jpg",
-  width: 800,
-  quality: 90
-});
-
-// Remote Zero-Disk Resize (Returns Base64)
-const { base64 } = image.resize({
-  src: "https://example.com/photo.png",
-  width: 300
-});
+image.resize({ src: "big.jpg", dist: "small.jpg", width: 800 });
 ```
 
-#### `image.crop(opts)`
-Fills the dimensions and crops from the center (Perfect for uniform square thumbnails).
+**Example: URL to Base64 (Zero-Disk)**
 ```javascript
-image.crop({
-  src: "user_upload.jpg",
-  width: 500,
-  height: 500
+const { base64 } = image.crop({ 
+  src: "https://site.com/user.jpg", 
+  width: 200, 
+  height: 200 
 });
 ```
 
 ---
 
 ### 📊 CSV Module (`csv`)
-Ultra-fast, stateful CSV engine with pre-fetching.
+Sub-millisecond CSV engine with background pre-fetching.
 
-#### `csv.open(path, options)`
-Opens a CSV and starts background pre-fetching.
-```javascript
-const h = csv.open("./data.csv", {
-  header: true,
-  mode: "object",
-  select: ["id", "email"]
-});
-```
+| Function | Description |
+| :--- | :--- |
+| `csv.open(path, opts)` | Opens file and starts native background reader. |
+| `csv.next(h, opts)` | Fetches next chunk from native buffer (v. fast). |
+| `csv.readAll(h)` | Returns ALL data in one native call (Zero JS overhead). |
+| `csv.create(path, opts)`| Creates a new CSV file natively. |
+| `csv.write(h, rows)` | Writes record(s) to the file. Supports single object or array. |
+| `csv.close(h)` | Closes handle and kills background threads. |
 
-#### `csv.readAll(handle)`
-Moves the entire loop into Go for zero JS overhead.
+**Example: Ultimate Bulk Read**
 ```javascript
-const records = csv.readAll(h);
+const h = csv.open("data.csv", { header: true, mode: "object" });
+try {
+  const data = csv.readAll(h);
+} finally {
+  csv.close(h);
+}
 ```
 
 ---
 
 ### 📧 SMTP Module (`smtp`)
-Enterprise-grade delivery with native rendering and connection pooling.
+Enterprise email system with connection pooling and native rendering.
 
-#### `smtp.bulk(options)`
-Parallel delivery using native goroutines.
-```javascript
-smtp.bulk({
-  ...creds,
-  emails: [{ to: "user1@abc.com", body: "Msg 1" }],
-  concurrency: 10
-});
-```
+| Function | Description |
+| :--- | :--- |
+| `smtp.send(opts)` | Sends a single email. Supports STARTTLS and Direct SSL. |
+| `smtp.bulk(opts)` | Sends multiple emails concurrently via parallel worker pool. |
+| `smtp.render(tpl, data)` | Renders a Go HTML template string natively. |
+| `smtp.renderFile(path, d)` | Renders a `.tmpl` or `.html` file directly from disk. |
 
-#### `smtp.renderFile(path, data)`
-Renders Go templates directly from disk.
+**Example: Native Rendering**
 ```javascript
 const body = smtp.renderFile("./welcome.tmpl", { name: "Soham" });
+smtp.send({ ...creds, body, raw: true });
 ```
 
 ---
 
-## 🌍 Real-World Use Cases
+## 🌍 Real-World Industrial Workflows
 
-### 1. Zero-Disk User Profile On-boarding
-Process user uploads without filling your server's disk with temporary garbage files.
+### ⚡ Case 1: Ultra-Fast OTP System
+Send transactional OTPs in microseconds by pre-rendering templates natively.
 ```javascript
-import { image } from "@titanpl/surface";
+import { smtp } from "@titanpl/surface";
 
-export function onProfileUpload(req) {
-  // Use a Pinterest or S3 URL as source
-  const result = image.crop({
-    src: req.body.imageUrl,
-    width: 200,
-    height: 200
+export function sendOTP(req) {
+  // Render OTP template natively in Go
+  const body = smtp.render("<h1>Your OTP is: {{.code}}</h1>", { 
+    code: Math.floor(1000 + Math.random() * 9000) 
   });
 
-  // Save base64 string directly to User profile in DB
-  return db.users.update(req.userId, { 
-    avatar: result.base64 
+  // Fast Native Delivery
+  return smtp.send({
+    host: "smtp.gmail.com",
+    username: "...",
+    password: "...",
+    to: req.userEmail,
+    subject: "Your Login Code",
+    body
   });
 }
 ```
 
-### 2. High-Performance Marketing Pipeline
-Combine CSV, Templating, and SMTP for mass personalization.
+### 🖼️ Case 2: Production Profile Picture Pipeline
+Process user uploads from URLs and save the optimized Base64 string directly to the DB.
 ```javascript
-import { csv, smtp, image } from "@titanpl/surface";
+export function updateAvatar(req) {
+  const result = image.crop({
+    src: req.imageUrl,
+    width: 250,
+    height: 250,
+    quality: 90
+  });
 
-export function sendCampaign() {
+  return db.users.update(req.userId, { avatar: result.base64 });
+}
+```
+
+### 📈 Case 3: Massive Bulk Personalization
+Combining all modules into a high-speed data pipeline.
+```javascript
+import { csv, smtp, path } from "@titanpl/surface";
+
+export function marketingCampaign() {
+  // 1. Read 100k leads natively
   const h = csv.open("leads.csv", { mode: "object" });
   const leads = csv.readAll(h);
   csv.close(h);
 
-  const jobs = leads.map(lead => ({
-    to: lead.email,
-    body: smtp.renderFile("promo.tmpl", { name: lead.name })
+  // 2. Prep Rendered Data
+  const tpl = "../app/emails/promo.tmpl";
+  const jobs = leads.map(l => ({
+    to: l.email,
+    body: smtp.renderFile(tpl, { name: l.name })
   }));
 
-  return smtp.bulk({ ...creds, emails: jobs, concurrency: 20 });
-}
-```
-
-### 3. Automated Social Media Card Generator
-Scrape remote images and crop them natively for social previews.
-```javascript
-export function generateSocialPreview(req) {
-  return image.crop({
-    src: "https://images.unsplash.com/photo-12345",
-    dist: "./public/previews/card_1.jpg",
-    width: 1200,
-    height: 630
-  });
+  // 3. Parallel Blast via 10 workers
+  return smtp.bulk({ ...creds, emails: jobs, concurrency: 10, raw: true });
 }
 ```
 
