@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+        .header { background: linear-gradient(135deg, #6e8efb, #a777e3); padding: 30px; text-align: center; color: white; }
+        .content { padding: 30px; line-height: 1.6; color: #333; }
+        .footer { background-color: #f4f7f6; padding: 20px; text-align: center; font-size: 12px; color: #777; }
+        .button { display: inline-block; padding: 12px 24px; background-color: #6e8efb; color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Welcome to Titan Planet!</h1>
+        </div>
+        <div class="content">
+            <h2>Hello, {{.name}}!</h2>
+            <p>We are thrilled to have you here. This email was generated natively using <b>Go Templates</b> and delivered with the <b>Surface SMTP Engine</b>.</p>
+            <p>Your journey with high-performance native extensions begins now.</p>
+            <a href="#" class="button">Get Started</a>
+        </div>
+        <div class="footer">
+            &copy; 2026 TitanPL Surface Extension. All rights reserved.
+        </div>
+    </div>
+</body>
+</html>

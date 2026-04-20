@@ -1,0 +1,38 @@
+{
+    "name": "@titanpl/surface",
+    "version": "1.0.0",
+    "description": "Surface is a high-performance native extension layer for the Titan framework, built entirely in Go. It handles data-heavy, IO-bound, and system-level tasks outside the JavaScript runtime to ensure sub-millisecond response times and rock-solid stability.",
+    "main": "index.js",
+    "type": "module",
+    "types": "index.d.ts",
+    "scripts": {
+        "build:native": "go build -buildmode=c-shared -o surface.dll"
+    },
+    "keywords": [
+        "titan",
+        "titanpl",
+        "titan-planet",
+        "extension",
+        "native"
+    ],
+    "author": "ezetgalaxy",
+    "license": "ISC",
+    "files": [
+        "index.js",
+        "titan.json",
+        "utils",
+        "index.d.ts",
+        "*.h",
+        "*.dll",
+        "*.so",
+        "*.dylib",
+        "README.md"
+    ],
+    "devDependencies": {
+        "esbuild": "^0.27.2"
+    },
+    "dependencies": {
+        "@titanpl/core": "4.0.0",
+        "@titanpl/native": "^7.0.1"
+    }
+}
