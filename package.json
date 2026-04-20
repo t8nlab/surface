@@ -21,6 +21,7 @@
         "index.js",
         "titan.json",
         "utils",
+        "lib",
         "index.d.ts",
         "*.h",
         "*.dll",
