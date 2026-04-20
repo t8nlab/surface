@@ -4,7 +4,7 @@ export function getuser(req) {
   const start = Date.now();
 
   // 1. Create a new CSV file
-  const h2 = csv.create("../app/hui.csv", {
+  const h2 = csv.create("../hui.csv", {
     headers: ["count", "name", "email"],
   });
 

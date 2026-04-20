@@ -1,159 +1,183 @@
-# ⏣ TitanPl Surface
+# ⏣ TitanPL Surface
+### The Definitive Native Function Catalog
 
 Surface is an ultra-optimized high level modules provider native extension for the TitanPl framework, built entirely in **Go**. It handles data-heavy, IO-bound, and system-level tasks outside the JavaScript runtime to ensure sub-millisecond response times and rock-solid stability.
 
----
-
-## 🏎️ Core Architecture (The Go Advantage)
-
-Surface eliminates the "JavaScript Tax" by moving heavy workloads to the native layer.
-
-- **Non-Blocking I/O**: While Node.js waits for disk/network interrupts, Surface uses Go routines (lightweight threads) to pre-process data in parallel.
-- **Zero-Copy Buffering**: We use `bytes.Buffer` and manual JSON builders in Go to avoid the memory fragmentation common in garbage-collected environments.
-- **Atomic Operations**: We chain multiple logical steps (like Image Resize + Crop + Format) in one execution cycle, keeping data in the CPU's L2 cache.
 
 ---
 
-## 📊 Module: CSV Streaming Engine
-The fastest way to process massive tabular datasets in the Titan ecosystem.
+## 📊 CSV Module (`csv`)
 
-### Under the Hood: The Pre-fetcher
-When you call `csv.open`, Surface spawns a background "Look-ahead" thread. While your JavaScript is processing row #1, the Go thread is already parsing and buffering rows #1,001 to #2,000. When you call `csv.next`, the data is delivered instantly from RAM.
-
-### Functions & Examples
-
-#### `csv.open(path, options)`
-Initializes the streamer and background pre-fetcher.
+### `csv.open(path, opts)`
+Opens a CSV file for streaming.
 ```javascript
-const h = csv.open("./data.csv", {
-  header: true,      // Auto-extract column names
-  mode: "object",    // Output as { key: value }
-  inferTypes: true,  // Convert "true" -> true, "123" -> 123
-  select: ["id", "name"] // High Performance: only parse what you need
+// Opens file with automatic type inference
+const handler = csv.open("./data.csv", { header: true, inferTypes: true });
+```
+
+### `csv.next(handler, opts)`
+Fetches the next chunk.
+```javascript
+const chunk = csv.next(handler, { size: 500 });
+// Returns: { rows: [...], done: false }
+```
+
+### `csv.readAll(handler)`
+Memory-intensive but ultra-fast dump.
+```javascript
+const allData = csv.readAll(handler);
+```
+
+### `csv.create(path, opts)`
+Creates a new CSV with fixed headers.
+```javascript
+const wh = csv.create("./export.csv", { headers: ["id", "status"] });
+```
+
+### `csv.write(handler, rows)`
+Buffered native writing.
+```javascript
+csv.write(wh, [{ id: 1, status: "active" }, { id: 2, status: "pending" }]);
+```
+
+### `csv.close(handler)`
+Releases file descriptors and flushes memory.
+```javascript
+csv.close(wh);
+```
+
+---
+
+## 💎 JSON Module (`json`)
+
+### `json.open(path, opts)`
+Native token-walking reader.
+```javascript
+// Path walking: skips bytes to reach 'logs.errors' natively
+const rh = json.open("./app.json", { fpath: "logs.errors[*]" });
+```
+
+### `json.next(handler, opts)`
+Native streaming for massive JSON files.
+```javascript
+const logs = json.next(rh, { size: 10 });
+```
+
+### `json.create(path, opts)`
+Stream writer for JSON or JSONL.
+```javascript
+const wh = json.create("./logs.jsonl", { format: "jsonl" });
+```
+
+### `json.write(handler, data)`
+Serialized write (Standard `[...]` or `JSONL`).
+```javascript
+json.write(wh, { event: "click", time: Date.now() });
+```
+
+### `json.stringify(data)`
+Native Go-based serialization (faster than JS).
+```javascript
+const nativeStr = json.stringify({ complex: "object" });
+```
+
+### `json.toCSV(jsonPath, csvPath)`
+The Native Bridge. Streams records directly from JSON to CSV.
+```javascript
+json.toCSV("./data.json", "./static/data.csv");
+```
+
+### `json.close(handler)`
+Safety cleanup.
+```javascript
+json.close(rh);
+```
+
+---
+
+## 📧 SMTP Module (`smtp`)
+
+### `smtp.send(config, email)`
+Immediate TLS delivery.
+```javascript
+await smtp.send(config, {
+  to: "user@titan.pl",
+  subject: "OTP",
+  body: "Code: 1234"
 });
 ```
 
-#### `csv.next(handler, options)`
-Streaming access to the native buffer.
+### `smtp.bulk(config, emails)`
+Parallel worker-pool delivery.
 ```javascript
-const chunk = csv.next(h, { size: 500 });
-console.log(chunk.rows); // Array of 500 pre-fetched records
+// Send 10,000 emails concurrently
+smtp.bulk(config, [{ to: "a@a.com", ... }, { to: "b@b.com", ... }]);
 ```
 
-#### `csv.readAll(handler)`
-Flushes the entire file through Go into JS in one pass.
+### `smtp.render(html, data)`
+XSS-Safe Go Template rendering.
 ```javascript
-const allUsers = csv.readAll(h); // The absolute fastest way to read
+const body = smtp.render("<h1>Hello {{.name}}</h1>", { name: "Titan" });
 ```
 
-#### `csv.create(path, options)`
-Creates a new CSV with native buffering.
+### `smtp.renderFile(path, data)`
+File-based templating.
 ```javascript
-const wh = csv.create("./export.csv", { headers: ["name", "score"] });
+const body = smtp.renderFile("./templates/welcome.html", { name: "User" });
 ```
-
-#### `csv.write(handler, data)`
-Writes records with near-zero latency.
-```javascript
-csv.write(wh, { name: "Soham", score: 100 });
-csv.write(wh, [{ name: "John", score: 80 }, { name: "Jane", score: 95 }]);
-```
-
-#### `csv.close(handler)`
-Kills background threads and releases OS file locks.
-```javascript
-try { ... } finally { csv.close(h); }
-```
-
-### 💡 Industrial Use Case: Data Warehouse Ingestion
-Syncing 10 million records from an old CSV into a modern DB.
-> **Problem**: Standard Node `fs` and `fast-csv` bloat the memory and lock the event loop for minutes.
-> **Solution**: Use `csv.open` with a 10,000-row `next()` loop. Surface handles the 1GB file reading in the background while your JS keeps the server responsive.
 
 ---
 
-## 📧 Module: SMTP Communication Engine
-Enterprise-grade delivery with persistent connection pooling.
+## 🖼️ Image Module (`image`)
 
-### Under the Hood: The Pooling Logic
-Unlike standard libraries that "Login -> Send -> Logout" for every email, `smtp.bulk` maintains a **Persistent TLS Tunnel**. Workers stay logged in and stream emails through an open socket, bypassing Gmail/Exchange security rate-limits.
-
-### Functions & Examples
-
-#### `smtp.send(options)`
-Delivers a single email. Supports implicit SSL (465) and STARTTLS (587).
+### `image.resize(inputPath, opts)`
+High-performance single resize.
 ```javascript
-smtp.send({
-  host: "smtp.gmail.com",
-  username: "...", password: "...",
-  to: "client@test.com",
-  subject: "Order #123",
-  body: "<h1>Thanks!</h1>"
-});
+image.resize("./in.jpg", { out: "./out.webp", width: 300 });
 ```
 
-#### `smtp.bulk(options)`
-Uses a native worker pool to send hundreds of emails concurrently.
+### `image.crop(inputPath, opts)`
+Coordinate or Center cropping.
 ```javascript
-smtp.bulk({
-  ...creds,
-  emails: jobs,
-  concurrency: 10 // Maximize throughput with 10 parallel connections
-});
+image.crop("./in.jpg", { out: "./cropped.jpg", x: 0, y: 0, w: 100, h: 100 });
 ```
 
-#### `smtp.render(template, data)` / `renderFile(path, data)`
-Native Go `html/template` engine. Fast and XSS-safe.
+### `image.process(opts)`
+Atomic Pipeline (One pass).
 ```javascript
-const body = smtp.renderFile("./otp.tmpl", { code: "9182" });
-```
-
-### 💡 Industrial Use Case: High-Speed OTP & SaaS Notifications
-Delivering millions of per-user notifications.
-> **Problem**: Node-based templating is slow for 100k renders.
-> **Solution**: Move rendering to Go. `smtp.renderFile` executes in microseconds, and `smtp.bulk` blasts them via parallel tunnels. No lag, no connection errors.
-
----
-
-## 🖼️ Module: Atomic Image Processing
-The ultimate media engine for modern web apps.
-
-### Under the Hood: The Atomic Pipeline
-Every time you resize/crop an image, it must be decoded into pixels and then re-encoded into a format (JPG/PNG). `image.process` allows you to chain 5 actions while the image is **already decoded**, skipping 4 redundant encode/decode cycles.
-
-### Functions & Examples
-
-#### `image.process(options)`
-Multi-step atomic processing.
-```javascript
-const result = image.process({
-  src: "input.png",
-  out: "thumb.webp", // Optional: returns base64 if omitted
-  format: "webp",
+image.process({
+  input: "./in.png",
+  out: "./optimized.webp",
   steps: [
-    { action: "resize", width: 800 },
-    { action: "grayscale" },
-    { action: "crop", width: 300, height: 300 }
+    { resize: { width: 500 } },
+    { crop: { w: 200, h: 200 } }
   ]
 });
 ```
 
-#### `image.batch(options)`
-Parallel media generator via a shared native worker pool.
+### `image.batch(list)`
+Massive Parallel processing.
 ```javascript
-image.batch({
-  concurrency: 8,
-  items: [
-    { src: "a.jpg", out: "a_sm.jpg", width: 100 },
-    { src: "b.jpg", out: "b_sm.jpg", width: 100 }
-  ]
-});
+image.batch([
+  { input: "1.png", out: "1.webp", resize: { width: 50 } },
+  { input: "2.png", out: "2.webp", resize: { width: 50 } }
+]);
 ```
-
-### 💡 Industrial Use Case: Cloud-Scale Image Optimization
-Generating 5 different social media sizes for every user upload.
-> **Problem**: Uploading a 5MB image and generating 5 thumbnails in Node.js can take 5+ seconds and 200MB of RAM.
-> **Solution**: Direct URL streaming in Surface. Go fetches the 5MB file, renders all variations in parallel via goroutines, and returns optimized WebP strings in <800ms with constant RAM usage.
 
 ---
-Built with ❤️ by the TitanPL Team.
+
+## 🌍 Real-World Architecture
+
+### Industrial Use Case: AI Data Pipeline
+1.  **Extract**: `json.open` (using `fpath`) to pull key data from nested AI response.
+2.  **Transform**: Process records via JS logic.
+3.  **Load**: `json.toCSV` to bridge the final cleaned data into a spreadsheet for the user.
+
+### Industrial Use Case: Marketing Engine
+1.  **Segmentation**: Use `csv.open` to read subscriber list.
+2.  **Rendering**: Use `smtp.render` to create personalized emails.
+3.  **Dispatch**: Use `smtp.bulk` for concurrent SMTP tunneling.
+
+---
+
+(c) 2026 Titan Planet Team. Speed is the only feature.

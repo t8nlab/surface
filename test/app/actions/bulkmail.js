@@ -2,20 +2,20 @@ import { csv, smtp } from "@titanpl/surface";
 
 export default function bulkmail(req) {
   const start = Date.now();
-  const csvPath = "../app/bulk_test.csv";
+  const csvPath = "../bulk_test.csv";
 
-  // // 1. GENERATE CSV with 200 rows natively
-  // const hCreate = csv.create(csvPath, { headers: ["to", "subject", "body"] });
-  // const mockRows = [];
-  // for (let i = 1; i <= 200; i++) {
-  //   mockRows.push({
-  //     to: "ezetapp@gmail.com",
-  //     subject: `Native Bulk Test #${i}`,
-  //     body: `<h1>Message ${i}</h1><p>Sent via Surface Parallel Engine.</p>`
-  //   });
-  // }
-  // csv.write(hCreate, mockRows);
-  // csv.close(hCreate);
+  // 1. GENERATE CSV with 200 rows natively
+  const hCreate = csv.create(csvPath, { headers: ["to", "subject", "body"] });
+  const mockRows = [];
+  for (let i = 1; i <= 200; i++) {
+    mockRows.push({
+      to: "[EMAIL_ADDRESS]",
+      subject: `Native Bulk Test #${i}`,
+      body: `<h1>Message ${i}</h1><p>Sent via Surface Parallel Engine.</p>`
+    });
+  }
+  csv.write(hCreate, mockRows);
+  csv.close(hCreate);
 
   // 2. READ CSV back (High speed)
   const hRead = csv.open(csvPath, { mode: "object" });

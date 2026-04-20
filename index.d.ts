@@ -119,6 +119,24 @@ export namespace smtp {
   }
 }
 
+export namespace json {
+  export interface OpenOptions {
+    /** format: 'auto' | 'json' | 'jsonl' (default: 'auto') */
+    format?: 'auto' | 'json' | 'jsonl';
+    /** extraction path (e.g. "users[*].email") */
+    fpath?: string;
+  }
+
+  export interface NextOptions {
+    size?: number;
+  }
+
+  export interface WriteOptions {
+    /** Output format: 'json' (array) | 'jsonl' (line-delimited) */
+    format?: 'json' | 'jsonl';
+  }
+}
+
 /** Standard object containing all CSV utilities */
 export declare const csv: {
   /**
@@ -126,25 +144,11 @@ export declare const csv: {
    * @param path Absolute or relative path to the .csv file
    * @param opts Configuration for the reader
    * @returns A native handler string to be used with other csv functions
-   * 
-   * @example
-   * const h = csv.open("data.csv", { mode: "object" });
-   * try {
-   *   let done = false;
-   *   while (!done) {
-   *     const chunk = csv.next(h, { size: 1000 });
-   *     // process chunk.rows here
-   *     done = chunk.done;
-   *   }
-   * } finally {
-   *   csv.close(h);
-   * }
    */
   open(path: string, opts?: csv.OpenOptions): string;
 
   /**
    * Reads a chunk of records from the native buffer.
-   * This is extremely fast as Go pre-fetches records in the background.
    * @param handler The handler returned by csv.open()
    * @param opts Chunking configuration
    */
@@ -152,7 +156,6 @@ export declare const csv: {
 
   /**
    * Reads the entire remaining contents of the CSV file in one Go call.
-   * Moves the iteration loop into the native layer for zero JS overhead.
    * @param handler The handler returned by csv.open()
    * @returns All records in the format specified by the mode
    */
@@ -160,22 +163,17 @@ export declare const csv: {
 
   /**
    * Closes the file handler and stops the native pre-fetching goroutine.
-   * Always call this in a finally block to prevent memory leaks.
    * @param handler The handler to close
    */
   close(handler: string): void;
 
   /**
    * Creates or overwrites a CSV file for writing.
-   * @param path Destination path
-   * @param opts Configuration including headers
    */
   create(path: string, opts: { headers: string[] }): string;
 
   /**
    * Writes rows to the CSV file.
-   * @param handler The handler returned by csv.create()
-   * @param rows Array of objects matching the headers
    */
   write(handler: string, rows: any[]): void;
 };
@@ -184,25 +182,21 @@ export declare const csv: {
 export declare const smtp: {
   /**
    * Sends a single email using the native Go engine.
-   * Supports both 587 (STARTTLS) and 465 (Direct SSL) ports.
    */
   send(opts: smtp.SendOptions): any;
 
   /**
    * Sends multiple emails concurrently using a native worker pool.
-   * Perfect for high-speed newsletters or bulk notifications.
    */
   bulk(opts: smtp.BulkSendOptions): any[];
 
   /**
    * Renders a Go HTML template natively.
-   * Uses standard Go {{.field}} syntax for data injection.
    */
   render(template: string, data?: any): string;
 
   /**
    * Reads and renders a Go template file directly from disk.
-   * Much faster as it bypasses the JS file system layer.
    */
   renderFile(path: string, data?: any): string;
 };
@@ -221,21 +215,36 @@ export declare const image: {
 
   /**
    * Complex pipeline processing.
-   * Executes multiple steps (resize, crop, grayscale, etc.) in a single pass.
    */
   process(opts: image.ProcessOptions): { status: string; path?: string; base64?: string };
 
   /**
    * Concurrent batch processing.
-   * Processes multiple images tasks in parallel using a native worker pool.
    */
   batch(opts: image.BatchOptions): any[];
+};
+
+/** Native JSON Streaming Module */
+export declare const json: {
+  /** Opens a JSON file for native streaming. Returns a native handler. */
+  open(path: string, opts?: json.OpenOptions): string;
+  /** Fetches the next chunk of JSON records. */
+  next(handler: string, opts?: json.NextOptions): { rows: any[], done: boolean };
+  /** Closes the JSON stream handler. */
+  close(handler: string): void;
+  /** Creates a new JSON/JSONL file for streaming output. */
+  create(path: string): string;
+  /** Writes a record to the native JSON stream. */
+  write(handler: string, data: any, opts?: json.WriteOptions): void;
+  /** Ultra-fast native serialization. Returns a string. */
+  stringify(data: any): string;
 };
 
 declare const _default: {
   csv: typeof csv;
   smtp: typeof smtp;
   image: typeof image;
+  json: typeof json;
 };
 
 export default _default;
