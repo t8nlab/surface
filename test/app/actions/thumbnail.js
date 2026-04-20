@@ -1,25 +1,40 @@
 import { image } from "@titanpl/surface";
+import { path } from "@titanpl/native";
 
 export default function thumbnail(req) {
   try {
-    const userUploadedUrl = "https://i.pinimg.com/736x/2c/c2/fe/2cc2fe16eed28daf889d3fe5eff629c3.jpg";
+    const src = "https://i.pinimg.com/736x/2c/c2/fe/2cc2fe16eed28daf889d3fe5eff629c3.jpg";
+    
+    // ✅ 1. PIPELINE MODE: Parallel operations in ONE native pass
+    const pipelineResult = image.process({
+      src: src,
+      out: path.resolve("app/complex_thumb.webp"),
+      format: "webp",
+      quality: 80,
+      steps: [
+        { action: "resize", width: 800 },
+        { action: "grayscale" },
+        { action: "blur", sigma: 0.5 },
+        { action: "crop", width: 400, height: 400 }
+      ]
+    });
 
-    const result = image.resize({
-      src: userUploadedUrl,
-      width: 200,
-      height: 0,
-      quality: 100
+    // ✅ 2. BATCH MODE: Parallel worker processing for multiple files
+    const batchResult = image.batch({
+      concurrency: 4,
+      items: [
+        { src: src, out: path.resolve("app/batch_1.jpg"), width: 100 },
+        { src: src, out: path.resolve("app/batch_2.png"), width: 300, format: "png" },
+        { src: src, width: 200 }
+      ]
     });
 
     return {
       success: true,
-      message: "Processed natively without touching the disk",
-      profilePicture: result.base64
+      pipeline: pipelineResult,
+      batch: batchResult
     };
   } catch (err) {
-    return {
-      success: false,
-      error: err.message
-    };
+    return { success: false, error: err.message };
   }
 }

@@ -7,15 +7,15 @@ export default function sendmail(req) {
 
     const rawEmail = smtp.renderFile(tplPath, {
       name: "Soham",
-      email: "ezetapp@gmail.com",
-      from: "clashersoham07@gmail.com"
+      email: "[EMAIL_ADDRESS]",
+      from: "[EMAIL_ADDRESS]"
     });
 
     const result = smtp.send({
       host: "smtp.gmail.com",
       port: 587,
-      username: "clashersoham07@gmail.com",
-      password: "jjke wzkr tyfs aeod", 
+      username: "[EMAIL_ADDRESS]",
+      password: "[PASSWORD]", 
       body: rawEmail,
       raw: true
     });

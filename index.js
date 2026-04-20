@@ -1,11 +1,9 @@
 import { createExt } from "./utils/native";
 import { csvOpen, csvNext, csvReadAll, csvCreate, csvWrite, csvClose } from "./lib/csv.js";
 import { smtpSend, smtpBulkSend, smtpRender, smtpRenderFile } from "./lib/smtp.js";
-import { imageResize, imageCrop } from "./lib/image.js";
+import { imageResize, imageCrop, imageProcess, imageBatch } from "./lib/image.js";
 
 export const ext = createExt("@titanpl/surface");
-
-
 
 // Compatibility layer
 export const csv = {
@@ -27,6 +25,8 @@ export const smtp = {
 export const image = {
   resize: imageResize,
   crop: imageCrop,
+  process: imageProcess,
+  batch: imageBatch,
 };
 
 export default { csv, smtp, image };

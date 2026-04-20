@@ -7,24 +7,48 @@
  */
 
 export namespace image {
-  export interface ResizeOptions {
-    /** Absolute path to source image */
-    src: string;
-    /** Absolute path to destination image */
-    dist: string;
-    /** Target width (0 to maintain aspect ratio) */
+  export interface Step {
+    action: 'resize' | 'crop' | 'grayscale' | 'blur';
     width?: number;
-    /** Target height (0 to maintain aspect ratio) */
     height?: number;
-    /** Output quality (1-100, default 85) */
+    sigma?: number;
+  }
+
+  export interface ProcessOptions {
+    /** Source: path, URL, or data:image/base64 */
+    src: string;
+    /** Destination file path. If omitted, returns Base64. */
+    out?: string;
+    /** Output format: 'jpg', 'png', 'webp' */
+    format?: 'jpg' | 'png' | 'webp';
+    /** Output quality (1-100) */
     quality?: number;
+    /** Array of operations to perform in order */
+    steps?: Step[];
+  }
+
+  export interface BatchOptions {
+    /** Array of process options for each image */
+    items: ProcessOptions[];
+    /** Max parallel workers (default 4) */
+    concurrency?: number;
+  }
+
+  export interface ResizeOptions {
+    src: string;
+    out?: string;
+    width?: number;
+    height?: number;
+    quality?: number;
+    format?: 'jpg' | 'png' | 'webp';
   }
 
   export interface CropOptions {
     src: string;
-    dist: string;
+    out?: string;
     width: number;
     height: number;
+    format?: 'jpg' | 'png' | 'webp';
   }
 }
 
@@ -186,36 +210,26 @@ export declare const smtp: {
 /** Native high-performance image processing */
 export declare const image: {
   /** 
-   * Resizes an image natively with professional-grade Lanczos3 interpolation.
-   * Supports local file paths and remote HTTP/HTTPS URLs.
-   * 
-   * @param opts Configuration for resizing
-   * @returns If 'dist' is provided, returns the path. If omitted, returns a Base64 data string.
-   * 
-   * @example
-   * // File to File
-   * image.resize({ src: "large.jpg", dist: "small.jpg", width: 800 });
-   * 
-   * // URL to Base64 (Zero-Disk)
-   * const { base64 } = image.resize({ src: "https://site.com/img.png", width: 300 });
+   * Resizes an image natively.
    */
-  resize(opts: image.ResizeOptions): { 
-    status: string; 
-    path?: string; 
-    base64?: string;
-  };
+  resize(opts: image.ResizeOptions): { status: string; path?: string; base64?: string };
 
   /** 
-   * Fills and crops an image to exact dimensions from the center.
-   * Ideal for generating uniform aspect-ratio thumbnails for profile pictures or cards.
-   * 
-   * @returns If 'dist' is provided, returns the path. If omitted, returns a Base64 data string.
+   * Crops and fills an image to exact dimensions from the center.
    */
-  crop(opts: image.CropOptions): { 
-    status: string; 
-    path?: string; 
-    base64?: string;
-  };
+  crop(opts: image.CropOptions): { status: string; path?: string; base64?: string };
+
+  /**
+   * Complex pipeline processing.
+   * Executes multiple steps (resize, crop, grayscale, etc.) in a single pass.
+   */
+  process(opts: image.ProcessOptions): { status: string; path?: string; base64?: string };
+
+  /**
+   * Concurrent batch processing.
+   * Processes multiple images tasks in parallel using a native worker pool.
+   */
+  batch(opts: image.BatchOptions): any[];
 };
 
 declare const _default: {

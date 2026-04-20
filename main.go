@@ -22,6 +22,8 @@ func init() {
 
 	ext.Register("image_resize", sfImage.ImageResize)
 	ext.Register("image_crop", sfImage.ImageCrop)
+	ext.Register("image_process", sfImage.ImageProcess)
+	ext.Register("image_batch", sfImage.ImageBatch)
 }
 
 

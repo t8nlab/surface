@@ -26,9 +26,9 @@ export default function bulkmail(req) {
   const settings = {
     host: "smtp.gmail.com",
     port: 587,
-    username: "clashersoham07@gmail.com",
-    password: "jjke wzkr tyfs aeod", 
-    from: "clashersoham07@gmail.com"
+    username: "[EMAIL_ADDRESS]",
+    password: "[PASSWORD]", 
+    from: "[EMAIL_ADDRESS]"
   };
 
   try {
