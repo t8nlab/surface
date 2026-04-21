@@ -28,6 +28,7 @@ func init() {
 
 	ext.Register("json_open", sfJson.JsonOpen)
 	ext.Register("json_next", sfJson.JsonNext)
+	ext.Register("json_read_all", sfJson.JsonReadAll)
 	ext.Register("json_close", sfJson.JsonClose)
 	ext.Register("json_create", sfJson.JsonCreate)
 	ext.Register("json_write", sfJson.JsonWrite)

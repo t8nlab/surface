@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"sync"
@@ -19,7 +20,7 @@ type JsonStream struct {
 	mu      sync.Mutex
 	decoder *json.Decoder
 	scanner *bufio.Scanner
-	file    *os.File
+	file    io.ReadCloser
 	format  string
 	path    string
 	mode    string
@@ -58,7 +59,7 @@ func JsonOpen(input map[string]any) (any, error) {
 	if mode == "" { mode = "object" }
 	if format == "" { format = "auto" }
 
-	file, err := os.Open(path)
+	file, err := sfInput.GetReader(path)
 	if err != nil { return nil, err }
 
 	if format == "auto" || format == "" {
@@ -351,4 +352,28 @@ func JsonToCsv(input map[string]any) (any, error) {
 	sfCsv.CsvClose(map[string]any{"handler": ch})
 
 	return map[string]any{"success": true, "out": csvPath}, nil
+}
+
+func JsonReadAll(input map[string]any) (any, error) {
+	handler, _ := sfInput.GetString(input, "handler")
+	mu.Lock()
+	s, ok := streams[handler]
+	mu.Unlock()
+	if !ok { return nil, errors.New("invalid handler") }
+
+	var buf bytes.Buffer
+	buf.WriteByte('[')
+	count := 0
+	for item := range s.records {
+		if count > 0 { buf.WriteByte(',') }
+		buf.Write(item)
+		count++
+	}
+	buf.WriteByte(']')
+
+	s.mu.Lock()
+	s.done = true
+	s.mu.Unlock()
+
+	return json.RawMessage(buf.Bytes()), nil
 }

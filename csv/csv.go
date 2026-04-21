@@ -22,7 +22,7 @@ type CsvStream struct {
 	selectMap  map[int]string
 	inferTypes bool
 	mode       string // "object", "column", "raw"
-	file       *os.File
+	file       io.ReadCloser
 
 	// Async pre-fetching (Stores pre-marshaled JSON rows)
 	records chan []byte
@@ -67,7 +67,7 @@ func CsvOpen(input map[string]any) (any, error) {
 		delimiter = rune(d[0])
 	}
 
-	file, err := os.Open(path)
+	file, err := sfInput.GetReader(path)
 	if err != nil {
 		return nil, err
 	}

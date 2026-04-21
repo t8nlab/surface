@@ -2,7 +2,7 @@ import { createExt } from "./utils/native";
 import { csvOpen, csvNext, csvReadAll, csvCreate, csvWrite, csvClose } from "./lib/csv.js";
 import { smtpSend, smtpBulkSend, smtpRender, smtpRenderFile } from "./lib/smtp.js";
 import { imageResize, imageCrop, imageProcess, imageBatch } from "./lib/image.js";
-import { jsonOpen, jsonNext, jsonClose, jsonCreate, jsonWrite, jsonStringify, jsonToCsv } from "./lib/json.js";
+import { jsonOpen, jsonNext, jsonClose, jsonCreate, jsonWrite, jsonStringify, jsonToCsv, jsonReadAll } from "./lib/json.js";
 
 export const ext = createExt("@titanpl/surface");
 
@@ -33,6 +33,7 @@ export const image = {
 export const json = {
   open: jsonOpen,
   next: jsonNext,
+  readAll: jsonReadAll,
   close: jsonClose,
   create: jsonCreate,
   write: jsonWrite,
