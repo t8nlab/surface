@@ -172,6 +172,56 @@ export namespace json {
   }
 }
 
+
+  /** Native Data Validation & Cleaning */
+  export const clean: {
+    /**
+     * Natively validates emails in a file using regex and structural checks.
+     */
+    validateEmails(path: string): { valid: number; invalid: number };
+
+    /**
+     * Normalizes phone numbers to E.164 format.
+     * Supports array of strings OR a file transformation task.
+     */
+    normalizePhones(input: string[] | { path: string; out: string }): any;
+
+    /**
+     * Natively removes duplicate rows from a file.
+     */
+    removeDuplicates(src: string, out: string): { processed: number; duplicates: number; success: boolean };
+
+    /**
+     * Complete data cleaning in a single native pass.
+     */
+    process(opts: { 
+      src: string; 
+      out: string; 
+      normalize?: boolean; 
+      dedup?: boolean; 
+      concurrency?: number;
+      phoneFields?: number[]; // Specify column indices to treat as phones
+    }): { processed: number; duplicates: number; invalidEmails: number; workers: number; success: boolean };
+  };
+
+/** Native Web Extraction */
+export declare const extract: {
+  /**
+   * Fetches raw HTML from a URL natively.
+   */
+  html(url: string): string;
+
+  /**
+   * Extracts all links (hrefs) from a URL natively.
+   */
+  links(url: string): string[];
+
+  /**
+   * Extracts SEO/OpenGraph metadata from a URL natively.
+   */
+  meta(url: string): Record<string, string>;
+};
+
 /** Standard object containing all CSV utilities */
 export declare const csv: {
   /**
@@ -348,6 +398,8 @@ declare const _default: {
   smtp: typeof smtp;
   image: typeof image;
   json: typeof json;
+  clean: typeof clean;
+  extract: typeof extract;
 };
 
 export default _default;

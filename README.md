@@ -38,7 +38,7 @@ const wh = csv.create("./export.csv", { headers: ["id", "name", "status"], delim
 ```
 
 ### `csv.write(handler, rows)`
-Buffered native writing. Accepts an array of objects (matching headers) or an array of arrays.
+Buffered native writing. Accepts an array of objects or an array of arrays.
 ```javascript
 csv.write(wh, [
   { id: 1, name: "Titan", status: "active" }, 
@@ -94,7 +94,7 @@ const nativeStr = json.stringify({ complex: "object", data: [1, 2, 3] });
 ```
 
 ### `json.toCSV(jsonPath, csvPath, opts)`
-The Native Bridge. Streams records directly from a JSON file into a CSV file with zero JavaScript overhead.
+The Native Bridge. Streams records directly from JSON to CSV natively.
 ```javascript
 json.toCSV("./data.json", "./static/data.csv", { fpath: "items[*]" });
 ```
@@ -192,7 +192,7 @@ image.process({
 ```
 
 ### `image.batch(opts)`
-Massive Parallel processing of multiple images using a native worker pool.
+Massive Parallel processing using a native worker pool.
 ```javascript
 image.batch({
   concurrency: 4,
@@ -203,12 +203,80 @@ image.batch({
 });
 ```
 
+## 🧹 Data Cleaning Module (`clean`)
+
+### `clean.validateEmails(path)`
+Natively validates emails in a massive file using high-performance Go regex engines.
+```javascript
+const stats = clean.validateEmails("./users_export.csv");
+// Returns: { valid: 920, invalid: 80 }
+```
+
+### `clean.normalizePhones(phones)`
+Normalizes an array of phone numbers to E.164 format natively.
+```javascript
+const cleanPhones = clean.normalizePhones(["(555) 123-4567", "1-555-987-6543"]);
+// Returns: ["+5551234567", "+15559876543"]
+```
+
+### `clean.removeDuplicates(src, out)`
+Natively removes duplicate rows from a file. Extremely fast for datasets with millions of rows.
+```javascript
+const res = clean.removeDuplicates("./dirty.csv", "./cleaned.csv");
+// Returns: { processed: 1000, duplicates: 34, saved: 966 }
+```
+
+### `clean.process(opts)`
+The flagship cleaning engine. Processes millions of rows in a single native pass using a **Parallel Worker Pool** (powered by Go routines).
+- Performs **Deep Normalization**: Trims all fields and formats phones to E.164.
+- Performs **Native Deduplication**: High-speed row comparison using thread-safe maps.
+```javascript
+const stats = clean.process({
+  src: "./dirty_data.csv",
+  out: "./clean_data.csv",
+  normalize: true, 
+  dedup: true  ,
+  concurrency: 4,
+});
+// Returns: { processed: 1000000, duplicates: 342, workers: 16, success: true }
+```
+
+### `clean.validateEmails(path)`
+Natively validates email syntax across an entire file.
+```javascript
+const stats = clean.validateEmails("./leads.csv");
+```
+---
+
+---
+
+## 🔗 Web Extraction Module (`extract`)
+
+### `extract.html(url)`
+Fetches raw HTML from a public URL natively using Go's optimized HTTP stack.
+```javascript
+const rawHtml = extract.html("https://google.com");
+```
+
+### `extract.links(url)`
+Extracts all unique unique links (`href` attributes) from a URL natively.
+```javascript
+const links = extract.links("https://titanpl.vercel.app");
+```
+
+### `extract.meta(url)`
+Extracts SEO and OpenGraph metadata natively from any public URL.
+```javascript
+const seo = extract.meta("https://github.com");
+// Returns: { "og:title": "GitHub", "description": "...", ... }
+```
+
 ---
 
 ## 🚀 Pro Examples (Industrial Workflows)
 
 ### 1. Cloud Streaming (Zero Disk Overhead)
-Process massive datasets directly from the internet without saving to server disk.
+Stream datasets directly from the internet without saving to server disk.
 ```javascript
 import { csv } from "@titanpl/surface";
 
@@ -245,21 +313,19 @@ export default function bulk_otp() {
     emails: emails.map(row => ({
       to: row.email,
       subject: "Login Code",
-      body: `Your code: ${Math.random().toString().slice(2, 6)}`
+      body: `Code: ${Math.random().toString().slice(2, 6)}`
     })),
     concurrency: 10
   });
 }
 ```
 
----
-
 ## 🌍 Architecture
 
-### Industrial Use Case: AI Data Pipeline
-1.  **Extract**: `json.open` (using `fpath`) to pull key data from nested AI response.
-2.  **Transform**: Process records via JS logic.
-3.  **Load**: `json.toCSV` to bridge the final cleaned data into a spreadsheet for the user.
+### Industrial Use Case: Lead Generation & Data Cleaning
+1.  **Extract**: `extract.links(url)` to natively crawl a target site for possible leads.
+2.  **Verify**: `clean.validateEmails(file)` to ensure all extracted contact data is deliverable.
+3.  **Deliver**: `smtp.bulk(opts)` to send ultra-fast verified notifications.
 
 ---
 

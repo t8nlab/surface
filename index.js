@@ -3,6 +3,8 @@ import { csvOpen, csvNext, csvReadAll, csvCreate, csvWrite, csvClose } from "./l
 import { smtpSend, smtpBulkSend, smtpRender, smtpRenderFile } from "./lib/smtp.js";
 import { imageResize, imageCrop, imageProcess, imageBatch } from "./lib/image.js";
 import { jsonOpen, jsonNext, jsonClose, jsonCreate, jsonWrite, jsonStringify, jsonToCsv, jsonReadAll } from "./lib/json.js";
+import { cleanValidateEmails, cleanNormalizePhones, cleanRemoveDuplicates, cleanProcess } from "./lib/clean.js";
+import { extractHtml, extractLinks, extractMeta } from "./lib/extract.js";
 
 export const ext = createExt("@titanpl/surface");
 
@@ -41,4 +43,17 @@ export const json = {
   toCSV: jsonToCsv,
 };
 
-export default { csv, smtp, image, json };
+export const clean = {
+  validateEmails: cleanValidateEmails,
+  normalizePhones: cleanNormalizePhones,
+  removeDuplicates: cleanRemoveDuplicates,
+  process: cleanProcess,
+};
+
+export const extract = {
+  html: extractHtml,
+  links: extractLinks,
+  meta: extractMeta,
+};
+
+export default { csv, smtp, image, json, clean, extract };

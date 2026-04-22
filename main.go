@@ -5,6 +5,8 @@ import (
 	sfImage "github.com/t8nlab/surface/image"
 	sfJson "github.com/t8nlab/surface/json"
 	sfSmtp "github.com/t8nlab/surface/smtp"
+	sfClean "github.com/t8nlab/surface/clean"
+	sfExtract "github.com/t8nlab/surface/extract"
 	ext "github.com/t8nlab/surface/utils"
 )
 
@@ -34,6 +36,15 @@ func init() {
 	ext.Register("json_write", sfJson.JsonWrite)
 	ext.Register("json_stringify", sfJson.JsonStringifyFast)
 	ext.Register("json_to_csv", sfJson.JsonToCsv)
+
+	ext.Register("clean_validate_emails", sfClean.ValidateEmails)
+	ext.Register("clean_normalize_phones", sfClean.NormalizePhones)
+	ext.Register("clean_remove_duplicates", sfClean.RemoveDuplicates)
+	ext.Register("clean_process", sfClean.Process)
+
+	ext.Register("extract_html", sfExtract.ExtractHTML)
+	ext.Register("extract_links", sfExtract.ExtractLinks)
+	ext.Register("extract_meta", sfExtract.ExtractMeta)
 }
 
 
