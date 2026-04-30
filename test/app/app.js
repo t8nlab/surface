@@ -8,6 +8,9 @@ t.get("/json").action("testjson")
 t.get("/cloud").action("cloud_stream")
 t.get("/clean").action("testclean")
 t.get("/extract").action("testextract")
+t.get("/http").action("testhttp")
+t.get("/fetch").action("titanfetch")
+
 
 
 t.get("/").reply("Ready to land on Titan Planet 🚀");
