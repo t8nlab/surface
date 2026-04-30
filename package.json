@@ -1,6 +1,6 @@
 {
     "name": "@titanpl/surface",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "Surface is an ultra-optimized high level modules provider native extension for the TitanPl framework, built entirely in Go. It handles data-heavy, IO-bound, and system-level tasks outside the JavaScript runtime to ensure sub-millisecond response times and rock-solid stability.",
     "main": "index.js",
     "type": "module",
@@ -19,12 +19,14 @@
         "smtp",
         "seo",
         "seo extraction",
-        "clean"
+        "clean",
+        "http"
     ],
     "author": "ezetgalaxy",
     "license": "ISC",
     "files": [
         "index.js",
+        "ext.js",
         "titan.json",
         "utils",
         "lib",

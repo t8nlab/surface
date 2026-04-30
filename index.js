@@ -1,4 +1,3 @@
-import { createExt } from "./utils/native";
 import { csvOpen, csvNext, csvReadAll, csvCreate, csvWrite, csvClose } from "./lib/csv.js";
 import { smtpSend, smtpBulkSend, smtpRender, smtpRenderFile } from "./lib/smtp.js";
 import { imageResize, imageCrop, imageProcess, imageBatch } from "./lib/image.js";
@@ -7,7 +6,6 @@ import { cleanValidateEmails, cleanNormalizePhones, cleanRemoveDuplicates, clean
 import { extractHtml, extractLinks, extractMeta } from "./lib/extract.js";
 import httpSrf from "./lib/http.js";
 
-export const ext = createExt("@titanpl/surface");
 
 // Compatibility layer
 export const csv = {
