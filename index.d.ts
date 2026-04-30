@@ -393,6 +393,49 @@ export declare const json: {
   toCSV(jsonPath: string, csvPath: string, opts?: json.ToCsvOptions): any;
 };
 
+export namespace http {
+  export interface Config {
+    url?: string;
+    method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | string;
+    headers?: Record<string, any>;
+    params?: Record<string, any>;
+    data?: any;
+    /** Timeout in milliseconds (default: 30000) */
+    timeout?: number;
+  }
+
+  export interface Response<T = any> {
+    status: number;
+    statusText: string;
+    headers: Record<string, string>;
+    data: T;
+    url: string;
+    ok: boolean;
+  }
+}
+
+/** Native HTTP Client */
+export declare const http: {
+  /** Perform a custom HTTP request */
+  request<T = any>(config: http.Config): http.Response<T>;
+  request<T = any>(url: string, config?: http.Config): http.Response<T>;
+  
+  /** Shorthand for GET request */
+  get<T = any>(url: string, config?: http.Config): http.Response<T>;
+  
+  /** Shorthand for POST request */
+  post<T = any>(url: string, data?: any, config?: http.Config): http.Response<T>;
+  
+  /** Shorthand for PUT request */
+  put<T = any>(url: string, data?: any, config?: http.Config): http.Response<T>;
+  
+  /** Shorthand for DELETE request */
+  delete<T = any>(url: string, config?: http.Config): http.Response<T>;
+  
+  /** Shorthand for PATCH request */
+  patch<T = any>(url: string, data?: any, config?: http.Config): http.Response<T>;
+};
+
 declare const _default: {
   csv: typeof csv;
   smtp: typeof smtp;
@@ -400,6 +443,7 @@ declare const _default: {
   json: typeof json;
   clean: typeof clean;
   extract: typeof extract;
+  http: typeof http;
 };
 
 export default _default;

@@ -7,6 +7,7 @@ import (
 	sfSmtp "github.com/t8nlab/surface/smtp"
 	sfClean "github.com/t8nlab/surface/clean"
 	sfExtract "github.com/t8nlab/surface/extract"
+	sfHttp "github.com/t8nlab/surface/http"
 	ext "github.com/t8nlab/surface/utils"
 )
 
@@ -45,6 +46,10 @@ func init() {
 	ext.Register("extract_html", sfExtract.ExtractHTML)
 	ext.Register("extract_links", sfExtract.ExtractLinks)
 	ext.Register("extract_meta", sfExtract.ExtractMeta)
+
+	ext.Register("http_get", sfHttp.Get)
+	ext.Register("http_post", sfHttp.Post)
+	ext.Register("http_request", sfHttp.Request)
 }
 
 

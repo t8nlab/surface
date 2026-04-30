@@ -273,6 +273,41 @@ const seo = extract.meta("https://github.com");
 
 ---
 
+## 🌐 HTTP Module (`http`)
+
+### `http.get(url, opts)`
+Native high-performance GET request with **Axios-like API**. Automatically handles query parameters and headers.
+```javascript
+const res = http.get("https://api.example.com/data", {
+  params: { limit: 10 },
+  headers: { "Authorization": "Bearer ..." }
+});
+
+console.log(res.data); // Automatically parsed if JSON
+```
+
+### `http.post(url, data, opts)`
+Sends a POST request. **Auto-serializes** JavaScript objects to JSON and sets appropriate headers.
+```javascript
+const res = http.post("https://api.example.com/users", { 
+  name: "Titan", 
+  role: "Admin" 
+});
+```
+
+### `http.request(config)`
+Generic request method for full control over methods (PUT, DELETE, PATCH) and advanced settings.
+```javascript
+const res = http.request({
+  method: "PUT",
+  url: "https://api.example.com/update/1",
+  data: { status: "active" },
+  timeout: 5000 // 5 second timeout
+});
+```
+
+---
+
 ## 🚀 Pro Examples (Industrial Workflows)
 
 ### 1. Cloud Streaming (Zero Disk Overhead)

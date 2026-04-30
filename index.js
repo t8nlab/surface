@@ -5,6 +5,7 @@ import { imageResize, imageCrop, imageProcess, imageBatch } from "./lib/image.js
 import { jsonOpen, jsonNext, jsonClose, jsonCreate, jsonWrite, jsonStringify, jsonToCsv, jsonReadAll } from "./lib/json.js";
 import { cleanValidateEmails, cleanNormalizePhones, cleanRemoveDuplicates, cleanProcess } from "./lib/clean.js";
 import { extractHtml, extractLinks, extractMeta } from "./lib/extract.js";
+import httpSrf from "./lib/http.js";
 
 export const ext = createExt("@titanpl/surface");
 
@@ -56,4 +57,6 @@ export const extract = {
   meta: extractMeta,
 };
 
-export default { csv, smtp, image, json, clean, extract };
+export const http = httpSrf;
+
+export default { csv, smtp, image, json, clean, extract, http };
