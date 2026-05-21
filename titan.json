@@ -3,6 +3,7 @@
     "type": "native",
     "entry": "index.js",
     "native": {
-        "windows": "surface.dll"
+        "windows": "surface.dll",
+        "linux": "surface.so"
     }
 }

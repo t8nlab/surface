@@ -1,12 +1,13 @@
 {
     "name": "@titanpl/surface",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "description": "Surface is an ultra-optimized high level modules provider native extension for the TitanPl framework, built entirely in Go. It handles data-heavy, IO-bound, and system-level tasks outside the JavaScript runtime to ensure sub-millisecond response times and rock-solid stability.",
     "main": "index.js",
     "type": "module",
     "types": "index.d.ts",
     "scripts": {
-        "build": "go build -buildmode=c-shared -o surface.dll"
+        "build": "go build -buildmode=c-shared -o surface.dll",
+        "build:linux": "go build -buildmode=c-shared -o surface.so"
     },
     "keywords": [
         "titan",
